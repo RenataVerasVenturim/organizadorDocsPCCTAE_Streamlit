@@ -28,6 +28,17 @@ SCRIPTS = ["gerar_requerimento.py", "compactar_dossie.py"]
 ARQUIVO_ZIP = PASTA_BASE / "processoArquivos" / "Dossie_RSC_PCCTAE.zip"
 ROMANO = {1: "I", 2: "II", 3: "III", 4: "IV", 5: "V", 6: "VI"}
 
+# Pastas de trabalho. Pastas vazias não vão para o GitHub (e estas estão no
+# .gitignore), então no servidor elas precisam ser criadas ao iniciar.
+PASTAS_TRABALHO = ["processoArquivos", "RequerimentoRSC", "dadosdoServidor"]
+
+
+def garantir_pastas() -> None:
+    """Cria todas as pastas de trabalho, se ainda não existirem."""
+    for nome in PASTAS_TRABALHO:
+        (PASTA_BASE / nome).mkdir(parents=True, exist_ok=True)
+    (PASTA_BASE / sv.PASTA_DOCUMENTOS).mkdir(parents=True, exist_ok=True)
+
 
 # --------------------------------------------------------------- utilidades
 def fmt(valor) -> str:
@@ -122,8 +133,10 @@ def validar_pdfs(envios: dict):
 
 def gravar_pdfs(validos: list) -> dict:
     """Esvazia as pastas e grava os PDFs. Só é chamada depois da validação."""
+    garantir_pastas()
     sv.limpar_armazenamento()
     sv.preparar_armazenamento()
+    garantir_pastas()
     pdfs_por_linha = defaultdict(list)
     for r, i, linha, final, conteudo in validos:
         (Path(sv.PASTA_DOCUMENTOS) / final).write_bytes(conteudo)
@@ -184,6 +197,7 @@ def bloco_item(c: dict) -> None:
 
 def main() -> None:
     st.set_page_config(page_title="Dossiê RSC-PCCTAE - UFF", layout="wide")
+    garantir_pastas()
     sv.preparar_armazenamento()
     st.title("Dossiê do RSC-PCCTAE (UFF)")
     st.caption("Tudo é processado neste computador. Ao gerar o dossiê, as pastas "
