@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dossiê RSC-PCCTAE</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='script.js') }}"
+            defer></script>
+</head>
+
+<body>
+<main class="container">
+    <header class="cabecalho">
+        <h1>Organizador de dossiê RSC-PCCTAE</h1>
+        <p>Cadastro funcional, critérios e documentos comprobatórios.</p>
+    </header>
+
+    {% if sucesso %}
+        <div class="mensagem sucesso">{{ sucesso }}</div>
+    {% endif %}
+
+    {% if mensagens %}
+        <section class="mensagens" aria-live="polite">
+            {% for mensagem in mensagens %}
+                <p>{{ mensagem }}</p>
+            {% endfor %}
+        </section>
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data">
+        <section class="painel">
+            <h2>1. Dados da servidora</h2>
+
+            <div class="form-grid">
+                <label>
+                    Nome completo
+                    <input type="text" name="nome" required>
+                </label>
+                <label>
+                    Nome social
+                    <input type="text" name="nome_social">
+                </label>
+
+                <label>
+                    Saldo de pontuação de concessão anterior
+                    <input
+                        type="number"
+                        name="saldo_pontuacao_anterior"
+                        min="0"
+                        step="0.01"
+                        value="0"
+                    >
+                </label>
+
+                <label>
+                    Número do processo de concessão anterior
+                    <input type="text" name="processo_anterior">
+                </label>
+                <label>
+                    Matrícula SIAPE
+                    <input type="text" name="matricula_siape"
+                           inputmode="numeric" pattern="[0-9]{7}" required>
+                </label>
+
+                <label>
+                    Cargo
+                    <input type="text" name="cargo" required>
+                </label>
+
+                <label>
+                    Data de ingresso na UFF
+                    <input type="date" name="data_ingresso" required>
+                </label>
+
+                <label>
+                    Nível de classificação
+                    <select name="nivel_classificacao" required>
+                        <option value="">Selecione</option>
+                        {% for nivel in ["A", "B", "C", "D", "E"] %}
+                            <option value="{{ nivel }}">{{ nivel }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+                <label>
+                    Unidade de lotação
+                    <input type="text" name="unidade_lotacao" required>
+                </label>
+
+                <label>
+                    Exerce função gratificada (FG)?
+                    <select name="funcao_gratificada">
+                        <option value="Não">Não</option>
+                        <option value="Sim">Sim</option>
+                    </select>
+                </label>
+
+                <label>
+                    Exerce cargo de direção (CD)?
+                    <select name="cargo_direcao">
+                        <option value="Não">Não</option>
+                        <option value="Sim">Sim</option>
+                    </select>
+                </label>
+
+                <label>
+                    Telefone
+                    <input type="tel" name="telefone">
+                </label>
+
+                <label>
+                    E-mail
+                    <input type="email" name="email" required>
+                </label>
+
+                <label>
+                    Solicita atendimento prioritário?
+                    <select name="atendimento_prioritario"
+                            id="atendimento-prioritario">
+                        <option value="Não">Não</option>
+                        <option value="Sim">Sim</option>
+                    </select>
+                </label>
+
+                <label id="campo-motivo-prioridade" class="campo-largo">
+                    Motivo da prioridade
+                    <input type="text" name="motivo_prioridade">
+                </label>
+
+                <label>
+                    Nível de RSC pretendido
+                    <select name="nivel_rsc_pretendido" required>
+                        <option value="">Selecione</option>
+                        {% for nivel in [
+                            "RSC-I", "RSC-II", "RSC-III",
+                            "RSC-IV", "RSC-V", "RSC-VI"
+                        ] %}
+                            <option value="{{ nivel }}">{{ nivel }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+            </div>
+        </section>
+
+        <section class="painel">
+            <h2>2. Critérios e documentos comprobatórios</h2>
+
+            <p class="orientacao">
+                Informe a quantidade de unidades para cada ocorrência e
+                anexe os respectivos comprovantes em PDF na coluna à direita.
+                A pontuação obtida é calculada no navegador.
+            </p>
+
+            {% for criterio in criterios %}
+                <article class="criterio"
+                         data-requisito="{{ criterio.requisito }}"
+                         data-item="{{ criterio.item }}"
+                         data-proxima-linha="1">
+
+                    <h3>
+                        Critério {{ criterio.requisito }}.{{ criterio.item }}
+                        — {{ criterio.titulo }}
+                    </h3>
+
+                    <div class="tabela-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nº do item</th>
+                                    <th>Critério específico</th>
+                                    <th>Unidade de medida</th>
+                                    <th>Pontuação</th>
+                                    <th>Pontuação obtida</th>
+                                    <th>Documentos comprobatórios (PDF)</th>
+                                </tr>
+                            </thead>
+
+                            <tbody class="linhas-criterio">
+                                <tr class="linha-criterio">
+                                    <td>{{ criterio.requisito }}.{{ criterio.item }}</td>
+
+                                    <td>{{ criterio.titulo }}</td>
+
+                                    <td>{{ criterio.unidade }}</td>
+
+                                    <td
+                                        class="pontos-unitarios"
+                                        data-pontos="{{ criterio.pontos }}"
+                                        {% if criterio.variavel %}
+                                            data-pontos-titular="{{ criterio.pontos }}"
+                                            data-pontos-substituto="{{ criterio.pontos_substituto }}"
+                                        {% endif %}
+                                    >
+                                        {{ criterio.pontos }}
+                                    </td>
+                                    <td>
+                                        <label class="quantidade-label">
+                                            Quantidade
+                                            <input class="quantidade"
+                                                   type="number"
+                                                   min="0"
+                                                   max="1"
+                                                   step="1"
+                                                   value="0"
+                                                   aria-label="Quantidade de unidades" readonly>
+                                        </label>
+
+                                        <output class="pontuacao-obtida">0</output>
+                                        <span class="rotulo-pontos">pontos</span>
+                                    </td>
+
+                                    <td class="celula-documentos">
+                                        <label class="botao-arquivo">
+                                            Selecionar PDF(s)
+                                            <input
+                                                type="file"
+                                                class="entrada-pdf"
+                                                name="pdf__{{ criterio.requisito }}_{{ criterio.item }}_0"
+                                                accept=".pdf,application/pdf"
+                                                multiple>
+                                        </label>
+
+                                        <span class="nomes-arquivos">
+                                            Nenhum arquivo selecionado
+                                        </span>
+
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <button type="button" class="botao-adicionar">
+                        + Adicionar outra linha a este item
+                    </button>
+                </article>
+            {% endfor %}
+        </section>
+    <section class="painel">
+        <h2>3. Resumo da pontuação e dos critérios</h2>
+
+        <div class="resumo-pontuacao">
+            <label for="pontosMinimos">
+                Pontuação mínima exigida
+                <input
+                    type="number"
+                    id="pontosMinimos"
+                    readonly
+                    value=""
+                >
+            </label>
+
+            <label for="pontuacaoTotal">
+                Pontuação total obtida
+                <input
+                    type="number"
+                    id="pontuacaoTotal"
+                    readonly
+                    value="0"
+                >
+            </label>
+            <br><br>
+            <label for="qtdCriteriosMinima">
+                Critérios mínimos exigidos
+                <input
+                    type="text"
+                    id="qtdCriteriosMinima"
+                    readonly
+                    value="—"
+                >
+            </label>
+
+            <label for="qtdCriterios">
+                Critérios comprovados
+                <input
+                    type="text"
+                    id="qtdCriterios"
+                    readonly
+                    value="0"
+                >
+            </label>
+
+            
+        </div>
+
+        <p id="situacaoRSC" aria-live="polite">
+            Selecione o nível de RSC pretendido.
+        </p>
+    </section>
+                        
+        <div class="acoes">
+            <button type="submit" class="botao-enviar">
+                Gerar arquivos RSC-PCCTAE UFF
+            </button>
+        </div>
+    </form>
+</main>
+</body>
+</html>
